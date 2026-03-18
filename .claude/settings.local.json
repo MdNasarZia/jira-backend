@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m py_compile tests/unit/test_auth_service.py)",
+      "Bash(python -m py_compile tests/unit/test_issue_service.py)",
+      "Bash(python -m py_compile tests/unit/test_sprint_service.py)",
+      "Bash(python -m py_compile tests/integration/test_auth.py)",
+      "Bash(python -m py_compile tests/integration/test_projects.py)",
+      "Bash(python -m py_compile tests/integration/test_issues.py)",
+      "Bash(python -m py_compile tests/integration/test_sprints.py)",
+      "Bash(.venv/Scripts/pip install -e \".[dev]\")",
+      "Bash(.venv/Scripts/alembic revision --autogenerate -m \"initial schema\")",
+      "Bash(.venv/Scripts/alembic upgrade head)",
+      "Bash(.venv/Scripts/python -c \"from app.models import *; print\\(''All models import OK''\\)\")",
+      "Bash(.venv/Scripts/pip install \"pydantic[email]\")",
+      "Bash(.venv/Scripts/python -c \"import email_validator; print\\(email_validator.__version__\\)\")"
+    ]
+  }
+}

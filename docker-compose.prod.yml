@@ -1,0 +1,28 @@
+# Production overrides for docker-compose.yml.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# This file:
+#   - Disables debug mode
+#   - Removes the host-bound postgres port so the DB is not reachable from
+#     outside the Docker network
+#   - Removes the host-bound redis port for the same reason
+#   - Sets restart: always on all services
+#   - Removes any bind-mount volume overrides (no hot-reload)
+
+services:
+  app:
+    environment:
+      DATABASE_URL: postgresql+asyncpg://jira:jira@db:5432/jira_db
+      REDIS_URL: redis://redis:6379/0
+      DEBUG: "false"
+    restart: always
+
+  db:
+    ports: []
+    restart: always
+
+  redis:
+    ports: []
+    restart: always

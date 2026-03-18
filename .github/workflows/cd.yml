@@ -1,0 +1,57 @@
+name: CD
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    name: Deploy to Local Server
+    runs-on: self-hosted
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify Docker is available
+        run: docker version
+
+      - name: Write .env file
+        shell: bash
+        run: |
+          cat > .env << 'ENVEOF'
+          DATABASE_URL=postgresql+asyncpg://jira:${{ secrets.DB_PASSWORD }}@db:5432/jira_db
+          SECRET_KEY=${{ secrets.SECRET_KEY }}
+          ACCESS_TOKEN_EXPIRE_MINUTES=15
+          REFRESH_TOKEN_EXPIRE_DAYS=7
+          CORS_ORIGINS=["http://localhost","http://localhost:80"]
+          DEBUG=false
+          REDIS_URL=redis://redis:6379/0
+          ENVEOF
+
+      - name: Build Docker image
+        run: docker compose -f docker-compose.yml -f docker-compose.prod.yml build --no-cache app
+
+      - name: Run deployment script
+        shell: bash
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: bash scripts/deploy.sh
+
+      - name: Health check
+        shell: bash
+        run: |
+          echo "Waiting for app to become healthy..."
+          for i in $(seq 1 12); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "App is healthy (HTTP $STATUS)"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $STATUS, retrying in 5s..."
+            sleep 5
+          done
+          echo "ERROR: App did not become healthy after 60 seconds"
+          docker compose logs app --tail=50
+          exit 1
