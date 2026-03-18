@@ -558,6 +558,77 @@ This section lists everything you need to do **one time** to make the CI/CD work
 
 ### A. Backend: One-Time Setup
 
+#### A0. Install Docker Desktop (Windows)
+
+The backend CD pipeline requires Docker Desktop to be running on your Windows machine.
+Docker is not needed for CI (that runs on GitHub cloud) — only for CD (which runs locally).
+
+**Step 1 — Enable WSL 2** (required by Docker Desktop on Windows 11)
+
+Open PowerShell as Administrator and run:
+```powershell
+wsl --install
+```
+If WSL is already installed, this will say so — that's fine. **Restart your machine** if it
+installs WSL for the first time.
+
+**Step 2 — Download Docker Desktop**
+
+Go to https://www.docker.com/products/docker-desktop/ and download
+**Docker Desktop for Windows**.
+
+**Step 3 — Install Docker Desktop**
+
+Run the installer:
+- When asked, leave **"Use WSL 2 based engine"** checked (default — this is correct)
+- Leave **"Add shortcut to desktop"** checked
+- Click **OK** to finish
+
+**Restart your machine** after installation completes.
+
+**Step 4 — First launch**
+
+- Open **Docker Desktop** from the Start menu or desktop shortcut
+- Accept the Docker Subscription Service Agreement if prompted
+- Wait for Docker to fully start — the whale icon in the system tray will stop animating
+  and show a green "Engine running" status
+- Signing in to a Docker account is **optional** — the pipeline works with or without it
+
+**Step 5 — Add your user to the docker-users group** (required for runner permissions)
+
+Open PowerShell as Administrator:
+```powershell
+net localgroup docker-users dts1636 /add
+```
+> Replace `dts1636` with your actual Windows username if different.
+
+**Reboot** your machine after this for the group membership to take effect.
+
+**Step 6 — Verify Docker is working**
+
+Open a new PowerShell window (after the reboot) and run:
+```powershell
+docker version
+docker compose version
+docker run hello-world
+```
+All three should succeed. The `hello-world` container will print a confirmation message.
+
+**Step 7 — Configure Docker Desktop to start with Windows**
+
+- Open Docker Desktop → Settings (gear icon) → General
+- Check **"Start Docker Desktop when you sign in to your computer"**
+- Click **Apply & restart**
+
+This ensures Docker is always running when your machine boots, so the CD pipeline
+never fails due to Docker not being started.
+
+> **Why this matters for the runner:** The self-hosted runner runs as a Windows service.
+> When the CD workflow runs `docker version` or `docker compose build`, it needs Docker
+> Desktop to be running. With auto-start enabled, this is guaranteed after every reboot.
+
+---
+
 #### A1. Push Backend to GitHub
 
 If not already done:
