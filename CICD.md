@@ -597,11 +597,25 @@ This runner is shared by BOTH projects if you create only one. Or you can create
    .\svc.cmd start
    ```
 5. **Fix Docker permissions** (runner needs to access Docker Desktop):
+
+   **Method 1 — Service runs as your user account (recommended for personal machines):**
    - Open `services.msc` → find **GitHub Actions Runner** → Properties → **Log On** tab
    - Change from "Local System" to **your Windows user account** (enter your username and password)
    - Click OK → Restart the service
    - Also run (as Admin): `net localgroup docker-users YOUR_WINDOWS_USERNAME /add`
    - **Reboot** for group membership to take effect
+
+   **Method 2 — Run the runner manually (for office/restricted machines):**
+   - Skip the service account change entirely
+   - When you want to deploy, open PowerShell and run:
+     ```powershell
+     cd C:\actions-runner
+     ./run.cmd
+     ```
+   - Keep this terminal open during the deployment
+   - Trigger the deploy from **GitHub → Actions → CD → Run workflow** (manual trigger)
+   - Close the terminal after deployment finishes
+   - Note: The `cd.yml` workflow has `workflow_dispatch` enabled for this purpose
 
 #### A4. Enable Apache Proxy Modules (WAMP)
 
@@ -803,9 +817,8 @@ pm2 start pnpm --name jira-frontend -- start   # Start if stopped
 ### Common Issues
 
 **"Docker: permission denied"** on the self-hosted runner:
-- The runner service must run as your user account, not "Local System"
-- Check: `services.msc` → GitHub Actions Runner → Log On tab → This account
-- Also run: `net localgroup docker-users YOUR_USERNAME /add` and reboot
+- **Method 1 (personal machine):** Change the runner service account via `services.msc` → GitHub Actions Runner → Log On tab → set to your Windows user. Also run: `net localgroup docker-users YOUR_USERNAME /add` and reboot.
+- **Method 2 (office/restricted machine):** Don't use the service. Instead run `./run.cmd` manually in PowerShell before triggering a deploy. Then use the manual trigger: GitHub → Actions → CD → Run workflow.
 
 **Apache "proxy not found" error (500):**
 - Apache can't reach the backend/frontend
