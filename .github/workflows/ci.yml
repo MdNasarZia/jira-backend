@@ -36,6 +36,9 @@ jobs:
         run: ruff check app/ tests/ main.py
 
       - name: Run unit tests
+        env:
+          DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test_db
+          SECRET_KEY: ci-test-secret-key-not-used-in-unit-tests
         run: pytest tests/unit/ -v --cov=app --cov-report=term-missing --cov-report=xml
 
       - name: Upload coverage report
