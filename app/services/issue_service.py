@@ -61,6 +61,11 @@ class IssueService:
         await self._get_active_project(project_id)
 
         if data.epic_id is not None:
+            if data.type != IssueType.story:
+                raise ValidationError(
+                    "Only stories can be linked to an epic",
+                    {"type": data.type.value},
+                )
             epic = await self.epic_repo.get_by_id(data.epic_id)
             if epic is None or epic.project_id != project_id:
                 raise NotFoundError("Epic not found", {"epic_id": str(data.epic_id)})
@@ -203,11 +208,12 @@ class IssueService:
             )
 
         old_status = issue.status
+        issue_id = issue.id
         issue = await self.issue_repo.update(issue, {"status": data.status})
 
         await self.history_repo.create(
             {
-                "issue_id": issue.id,
+                "issue_id": issue_id,
                 "changed_by": current_user.id,
                 "from_status": old_status,
                 "to_status": data.status,

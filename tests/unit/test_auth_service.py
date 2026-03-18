@@ -75,7 +75,7 @@ async def test_register_creates_user_with_hashed_password():
     # Password must be hashed, not plain text
     assert call_args["password_hash"] != "strongpass123"
     assert len(call_args["password_hash"]) > 20
-    assert result == created_user
+    assert result[0] == created_user
 
 
 async def test_register_raises_conflict_on_duplicate_email():
